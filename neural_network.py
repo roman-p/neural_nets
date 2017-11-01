@@ -4,7 +4,7 @@ Simple implementation of a neural network
 import numpy as np
 
 def sigmoid(value):
-    pass
+    return 1. / (1 + np.exp(-value))
 
 class NeuralNetwork(object):
     def __init__(self, input_layer_size, hidden_layer_size, output_layer_size):
@@ -23,4 +23,3 @@ class NeuralNetwork(object):
         """ Propagate the values through the network
         """
         pass
- 
