@@ -6,9 +6,12 @@ import numpy as np
 def sigmoid(value):
     return 1. / (1 + np.exp(-value))
 
+def sigmoid_prime(value):
+    return np.exp(-value) / ((1 + np.exp(-value)) ** 2)
+
 class NeuralNetwork(object):
     def __init__(self, input_layer_size, hidden_layer_size, output_layer_size, \
-                eval_function=sigmoid):
+                eval_function=sigmoid, eval_prime_function=sigmoid_prime):
         """Initialize the NN
 
         Args:
@@ -27,6 +30,7 @@ class NeuralNetwork(object):
         self.weights_2 = np.random.randn(self.hidden_layer_size, \
                                         self.output_layer_size)
         self.eval_function = eval_function
+        self.eval_prime_function = eval_prime_function
 
 
     def forward(self, X):
@@ -44,3 +48,21 @@ class NeuralNetwork(object):
         self.z3 = np.dot(self.hidden_layer, self.weights_2)
         self.yHat = self.eval_function(self.z3)
         return self.yHat
+
+    def cost_function(self, X, y):
+        """Compute cost derivative with respect to the weights
+
+        Args:
+            X (np.matrix): Input Matrix, must be of size self.input_layer_size
+            y ():
+
+        """
+        self.yHat = self.forward(X)
+
+        delta3 = np.multiply(-(y-self.yHat), self.eval_prime_function(self.z3))
+        dJdW2 = np.dot(self.hidden_layer.T, delta3)
+
+        delta2 = np.dot(delta3, self.weights_2.T)*self.eval_prime_function(self.z2)
+        dJdW1 = np.dot(X.T, delta2)
+
+        return dJdW1, dJdW2
