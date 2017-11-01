@@ -49,12 +49,12 @@ class NeuralNetwork(object):
         self.yHat = self.eval_function(self.z3)
         return self.yHat
 
-    def cost_function(self, X, y):
+    def cost_function_prime(self, X, y):
         """Compute cost derivative with respect to the weights
 
         Args:
             X (np.matrix): Input Matrix, must be of size self.input_layer_size
-            y ():
+            y (): output vector
 
         """
         self.yHat = self.forward(X)
@@ -66,3 +66,14 @@ class NeuralNetwork(object):
         dJdW1 = np.dot(X.T, delta2)
 
         return dJdW1, dJdW2
+
+    def cost(self, X, y):
+        """Compute cost for given input considering existing weights
+
+        Args:
+            X (np.matrix): Input Matrix, must be of size self.input_layer_size
+            y (): output vector
+
+        """
+        yHat = self.forward(X)
+        return 0.5 * sum((y - yHat) ** 2)
