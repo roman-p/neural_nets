@@ -77,3 +77,28 @@ class NeuralNetwork(object):
         """
         yHat = self.forward(X)
         return 0.5 * sum((y - yHat) ** 2)
+
+    def get_weights(self):
+        """
+        Concatenate weights_1 and weights_2 into a vector
+        """
+        return np.concatenate((self.weights_1.ravel(), self.weights_2.ravel()))
+
+    def set_weights(self, weights):
+        """
+        Update weight values.
+        Args:
+            weights: contains first the W1, then the W2 vector
+        """
+        weights_1_start = 0
+        weights_1_end = self.input_layer_size * self.hidden_layer_size
+        self.weights_1 = np.reshape(weights[weights_1_start : weights_1_end],
+                                    (self.input_layer_size, self.hidden_layer_size))
+
+        weights_2_end = weights_1_end + self.hidden_layer_size * self.output_layer_size
+        self.weights_2 = np.reshape(weights[weights_1_end : weights_2_end],
+                                    (self.hidden_layer_size, self.output_layer_size))
+
+    def compute_gradients(self, X, y):
+        dJdW1, dJdW2 = self.cost_function_prime(X, y)
+        return np.concatenate((dJdW1.ravel(), dJdW2.ravel()))
