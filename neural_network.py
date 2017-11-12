@@ -13,7 +13,8 @@ def sigmoid_prime(value):
 
 class NeuralNetwork(object):
     def __init__(self, input_layer_size, hidden_layer_size, output_layer_size, \
-                eval_function=sigmoid, eval_prime_function=sigmoid_prime):
+                eval_function=sigmoid, eval_prime_function=sigmoid_prime,
+                l=0.0001):
         """Initialize the NN
 
         Args:
@@ -25,7 +26,7 @@ class NeuralNetwork(object):
         self.input_layer_size = input_layer_size
         self.hidden_layer_size = hidden_layer_size
         self.output_layer_size = output_layer_size
-
+        self.l = l #lambda for cost evaluation
         #Initialize Weights
         self.weights_1 = np.random.randn(self.input_layer_size, \
                                         self.hidden_layer_size)
@@ -69,6 +70,13 @@ class NeuralNetwork(object):
 
         return dJdW1, dJdW2
 
+    def cost_function_prime_with_penalty(self, X, y):
+        dJdW1, dJdW2 = self.cost_function_prime(X, y)
+        dJdW1 = dJdW1/X.shape[0] + self.l * self.weights_1
+        dJdW2 = dJdW2/X.shape[0] + self.l * self.weights_2
+        return dJdW1, dJdW2
+
+
     def cost(self, X, y):
         """Compute cost for given input considering existing weights
 
@@ -79,6 +87,13 @@ class NeuralNetwork(object):
         """
         yHat = self.forward(X)
         return 0.5 * sum((y - yHat) ** 2)
+
+    def cost_with_pentalty(self, X, y):
+        """
+        Cost function that introduces penalties for high weight vectors
+        """
+        return self.cost(X,y)/X.shape[0] + (self.l/2) * (np.sum(self.weights_1**2) + np.sum(self.weights_2**2))
+
 
     def get_weights(self):
         """
@@ -102,31 +117,36 @@ class NeuralNetwork(object):
                                     (self.hidden_layer_size, self.output_layer_size))
 
     def compute_gradients(self, X, y):
-        dJdW1, dJdW2 = self.cost_function_prime(X, y)
+        dJdW1, dJdW2 = self.cost_function_prime_with_penalty(X, y)
         return np.concatenate((dJdW1.ravel(), dJdW2.ravel()))
 
-    def train(self, X, y):
+    def train(self, trainX, trainY, testX, testY):
         """
         Train the NN with BFGS function
         """
         def cost_function_wrapper(weights, X, y):
             "Wrapper of our cost function to be used in scipy.optimize.minimize method"
             self.set_weights(weights)
-            cost = self.cost(X, y)
-            gradient = self.compute_gradients(X, y)
+            cost = self.cost_with_pentalty(trainX, trainY)
+            gradient = self.compute_gradients(trainX, trainY)
+
             return cost, gradient
+
         def callbackfunc(weights):
             self.set_weights(weights)
-            self.J.append(self.cost(X, y))
+            self.J.append(self.cost_with_pentalty(trainX, trainY))
+            self.testJ.append(self.cost_with_pentalty(testX, testY))
 
         self.J = []
+        self.testJ = []
+
         initial_weights = self.get_weights()
-        options = {'maxiter':300, 'disp':True,}
+        options = {'maxiter':150, 'disp':True,}
         _res = optimize.minimize(cost_function_wrapper,
                                 initial_weights,
                                 jac=True,
                                 method='BFGS',
-                                args=(X,y),
+                                args=(trainX, trainY),
                                 options=options,
                                 callback = callbackfunc,
                                 )
