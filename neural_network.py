@@ -115,3 +115,20 @@ class NeuralNetwork(object):
             cost = self.cost(X, y)
             gradient = self.compute_gradients(X, y)
             return cost, gradient
+        def callbackfunc(weights):
+            self.set_weights(weights)
+            self.J.append(self.cost(X, y))
+
+        self.J = []
+        initial_weights = self.get_weights()
+        options = {'maxiter':300, 'disp':True,}
+        _res = optimize.minimize(cost_function_wrapper,
+                                initial_weights,
+                                jac=True,
+                                method='BFGS',
+                                args=(X,y),
+                                options=options,
+                                callback = callbackfunc,
+                                )
+        self.set_weights(_res.x)
+        self.optimization_result = _res
