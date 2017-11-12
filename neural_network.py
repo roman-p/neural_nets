@@ -2,6 +2,8 @@
 Simple implementation of a neural network
 """
 import numpy as np
+from scipy import optimize
+
 
 def sigmoid(value):
     return 1. / (1 + np.exp(-value))
@@ -102,3 +104,14 @@ class NeuralNetwork(object):
     def compute_gradients(self, X, y):
         dJdW1, dJdW2 = self.cost_function_prime(X, y)
         return np.concatenate((dJdW1.ravel(), dJdW2.ravel()))
+
+    def train(self, X, y):
+        """
+        Train the NN with BFGS function
+        """
+        def cost_function_wrapper(weights, X, y):
+            "Wrapper of our cost function to be used in scipy.optimize.minimize method"
+            self.set_weights(weights)
+            cost = self.cost(X, y)
+            gradient = self.compute_gradients(X, y)
+            return cost, gradient
